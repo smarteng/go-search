@@ -81,7 +81,7 @@ func IndexCSV(index string, in io.ReadCloser, cb ...string) (docIds []string, er
 
 // 把JSON Lines(每行一个JSON)添加到索引库
 func IndexJSONLines(index string, in io.ReadCloser, cb ...string) (docIds []string, err error) {
-	return indexFromDocGenerator(index, in, fromJsonLines, cb...)
+	return indexFromDocGenerator(index, in, fromJSONLines, cb...)
 }
 
 //从文件获取doc做索引的统一流程，不同的文件类型需要实现一个fnReaderGenerator

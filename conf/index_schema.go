@@ -364,12 +364,12 @@ func toBool(v interface{}) (bool, error) {
 		if s == "" {
 			return false, nil
 		}
-		if i, err := strconv.Atoi(s); err == nil {
+		i, err := strconv.Atoi(s)
+		if err == nil {
 			return i != 0, nil
-		} else {
-			_, ok := trueVals[strings.ToLower(s)]
-			return ok, nil
 		}
+		_, ok := trueVals[strings.ToLower(s)]
+		return ok, nil
 	default:
 		return false, fmt.Errorf("can not convert %v to boolean", v)
 	}
@@ -383,11 +383,11 @@ func toDatetime(v interface{}, timeFmt string) (int64, error) {
 	case float64:
 		return int64(v.(float64)), nil
 	case string:
-		if t, err := time.ParseInLocation(timeFmt, v.(string), Loc); err != nil {
+		t, err := time.ParseInLocation(timeFmt, v.(string), Loc)
+		if err != nil {
 			return 0, err
-		} else {
-			return t.UnixNano(), nil
 		}
+		return t.UnixNano(), nil
 	default:
 		return 0, fmt.Errorf("connot convert %v to time", v)
 	}

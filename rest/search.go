@@ -61,7 +61,7 @@ func Search(c *helper.Context) {
 
 	pagination, timeout, docs, err := indexer.Query(index, q, fq, s, f, page, pagesize, fl)
 	if err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -78,7 +78,7 @@ func fromCsvFile(in io.Reader) (<-chan Doc, error) {
 }
 
 //从JSON Lines文件(每行一个JSON)依次读取doc；JSON间不能有','
-func fromJsonLines(in io.Reader) (<-chan Doc, error) {
+func fromJSONLines(in io.Reader) (<-chan Doc, error) {
 	docChan := make(chan Doc)
 
 	go func() {
