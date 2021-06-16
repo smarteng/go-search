@@ -2,8 +2,9 @@ package indexer
 
 import (
 	"go-search/conf"
-	"github.com/go-ego/riot"
 	"sync"
+
+	"github.com/go-ego/riot"
 )
 
 // 索引库: 一个索引schema定义 + 一个搜索引擎实例
@@ -14,20 +15,20 @@ type indexer struct {
 
 // q
 type query struct {
-	should  []string
-	must    []string
-	notIn   []string
+	should []string
+	must   []string
+	notIn  []string
 }
 
 // s
 type sorting struct {
 	fieldName string
 	asc       bool
-	fIdx      int  // set when querying
+	fIdx      int // set when querying
 }
 
 // filter range
-type range_ struct {
+type scope struct {
 	from interface{}
 	to   interface{}
 }
@@ -36,7 +37,7 @@ type range_ struct {
 type filter struct {
 	fieldName string
 	conds     []interface{}
-	ranges    []range_
+	ranges    []scope
 	fIdx      int // set when querying
 }
 
@@ -60,7 +61,7 @@ type parsedQuery struct {
 type StoredDoc map[string]interface{} // field name -> value
 
 var (
-	indexers    = map[string]*indexer{}  // index name => index
+	indexers    = map[string]*indexer{} // index name => index
 	indexerLock = &sync.RWMutex{}
-	allDocs     = []string{"."}  // a tricky, 在没有q的情况下搜索所有的doc
+	allDocs     = []string{"."} // a tricky, 在没有q的情况下搜索所有的doc
 )

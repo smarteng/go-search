@@ -6,7 +6,7 @@ all: $(EXE)
 
 go-search:
 	@echo "building $@ ..."
-	$(MAKE) -s -f make.inc s=static
+	$(MAKE) -s -f make.inc 
 
 clean:
 	rm -f $(EXE)

@@ -1,12 +1,13 @@
 package indexer
 
 import (
-	"github.com/go-ego/riot/types"
-	"go-search/conf"
 	"fmt"
+	"go-search/conf"
+	"math"
 	"reflect"
 	"strings"
-	"math"
+
+	"github.com/go-ego/riot/types"
 )
 
 // 根据参数完成实际的搜索查询
@@ -53,10 +54,10 @@ func (idx *indexer) pq2SearchQuery(pq *parsedQuery) (*types.SearchReq, error) {
 		RankOpts: &types.RankOpts{
 			ScoringCriteria: &scorerT{
 				schema: idx.schema,
-				pq: pq,
+				pq:     pq,
 			},
 			OutputOffset: pq.start,
-			MaxOutputs: pq.rows,
+			MaxOutputs:   pq.rows,
 		},
 	}
 
@@ -112,7 +113,7 @@ func (idx *indexer) pq2SearchQuery(pq *parsedQuery) (*types.SearchReq, error) {
 }
 
 func (idx *indexer) generateTokens(qs []string, flag *bool, res *[]string) {
-	if qs == nil || len(qs) == 0 {
+	if len(qs) == 0 {
 		return
 	}
 	for _, q := range qs {
@@ -125,7 +126,7 @@ func (idx *indexer) generateTokens(qs []string, flag *bool, res *[]string) {
 }
 
 func (idx *indexer) generateFieldTokens(fIdx int, qs []string, flag *bool, res *[]string) {
-	if qs == nil || len(qs) == 0 {
+	if len(qs) == 0 {
 		return
 	}
 
@@ -154,14 +155,14 @@ func (idx *indexer) generateFieldTokens(fIdx int, qs []string, flag *bool, res *
 
 func checkSortings(pqSortBys *[]sorting, fm map[string]int) {
 	sortBys := *pqSortBys
-	if sortBys == nil || len(sortBys) == 0 {
+	if len(sortBys) == 0 {
 		*pqSortBys = nil
 		return
 	}
 
 	count := 0
 	c := len(sortBys)
-	for i:=0; i<c; i++ {
+	for i := 0; i < c; i++ {
 		s := &sortBys[i]
 		if fIdx, ok := fm[s.fieldName]; !ok {
 			continue
@@ -172,7 +173,7 @@ func checkSortings(pqSortBys *[]sorting, fm map[string]int) {
 		if count != i {
 			sortBys[count] = *s
 		}
-		count += 1
+		count++
 	}
 
 	if count <= 0 {
@@ -211,14 +212,14 @@ func makeDefaultSortBys(schema *conf.Schema) []sorting {
 
 func checkFilters(pqFilters *[]filter, schema *conf.Schema) {
 	filters := *pqFilters
-	if filters == nil || len(filters) == 0 {
+	if len(filters) == 0 {
 		*pqFilters = nil
 		return
 	}
 
 	count := 0
 	c := len(filters)
-	for i:=0; i<c; i++ {
+	for i := 0; i < c; i++ {
 		f := &filters[i]
 		if fIdx, ok := schema.FieldMap[f.fieldName]; !ok {
 			continue
@@ -239,7 +240,7 @@ func checkFilters(pqFilters *[]filter, schema *conf.Schema) {
 		if count != i {
 			filters[count] = *f
 		}
-		count += 1
+		count++
 	}
 
 	if count <= 0 {
@@ -253,20 +254,20 @@ func checkFilters(pqFilters *[]filter, schema *conf.Schema) {
 
 func checkFilterConds(field *conf.Field, fconds *[]interface{}) {
 	conds := *fconds
-	if conds == nil || len(conds) == 0 {
+	if len(conds) == 0 {
 		*fconds = nil
 		return
 	}
 
 	c := len(conds)
 	count := 0
-	for i:=0; i<c; i++ {
+	for i := 0; i < c; i++ {
 		v, err := field.ToNativeValue(conds[i])
 		if err != nil {
 			continue
 		}
 		conds[count] = v
-		count += 1
+		count++
 	}
 
 	if count <= 0 {
@@ -279,16 +280,16 @@ func checkFilterConds(field *conf.Field, fconds *[]interface{}) {
 	}
 }
 
-func checkFilterRanges(field *conf.Field, franges *[]range_) {
+func checkFilterRanges(field *conf.Field, franges *[]scope) {
 	ranges := *franges
-	if ranges == nil || len(ranges) == 0 {
+	if len(ranges) == 0 {
 		*franges = nil
 		return
 	}
 
 	c := len(ranges)
 	count := 0
-	for i:=0; i<c; i++ {
+	for i := 0; i < c; i++ {
 		r := &ranges[i]
 		if r.from.(string) == "" {
 			r.from = nil
@@ -315,7 +316,7 @@ func checkFilterRanges(field *conf.Field, franges *[]range_) {
 		}
 
 		ranges[count] = *r
-		count += 1
+		count++
 	}
 
 	if count <= 0 {
@@ -358,10 +359,10 @@ func (scorer *scorerT) Score(doc types.IndexedDoc, fields interface{}) []float32
 
 	// fmt.Printf("doc.BM25: %v\n", doc.BM25)
 	/*
-	if scorer.pq.sortBys == nil {
-		// fmt.Printf("doc.BM25: %v\n", doc.BM25)
-		return []float32{float32(int(doc.BM25))}
-	}*/
+		if scorer.pq.sortBys == nil {
+			// fmt.Printf("doc.BM25: %v\n", doc.BM25)
+			return []float32{float32(int(doc.BM25))}
+		}*/
 
 	return storedDoc.score(scorer.pq.sortBys, int(doc.BM25))
 }
@@ -379,7 +380,7 @@ func (d StoredDoc) score(sortBys []sorting, bm25 int) []float32 {
 		output[i] = sortingScore(storedVal, bm25)
 		if sortBy.asc {
 			if output[i] != 0 {
-				output[i] = float32(1.0)/output[i]
+				output[i] = float32(1.0) / output[i]
 			} else {
 				output[i] = math.MaxFloat32
 			}
@@ -461,7 +462,7 @@ func condEquals(storedVal, cond interface{}, tokenizer string) bool {
 		sv := storedVal.(string)
 		switch tokenizer {
 		case conf.ZH_TOKENIZER:
-			return strings.Contains(sv,  cv)
+			return strings.Contains(sv, cv)
 		case conf.NONE_TOKENIZER:
 			return cv == strings.TrimSpace(sv)
 		default:
@@ -478,7 +479,7 @@ func condEquals(storedVal, cond interface{}, tokenizer string) bool {
 	}
 }
 
-func inRange(storedVal interface{}, r *range_) bool {
+func inRange(storedVal interface{}, r *scope) bool {
 	switch storedVal.(type) {
 	case string:
 		sv := storedVal.(string)
@@ -543,7 +544,10 @@ func inRange(storedVal interface{}, r *range_) bool {
 	return true
 }
 
-func (idx *indexer) outputResult(searchResp *types.SearchResp, pq *parsedQuery) (pagination interface{}, timeout bool, docsCh chan interface{}) {
+func (idx *indexer) outputResult(
+	searchResp *types.SearchResp,
+	pq *parsedQuery,
+) (pagination interface{}, timeout bool, docsCh chan interface{}) {
 	p := struct {
 		Total     int `json:"total"`
 		Pages     int `json:"pages"`

@@ -1,25 +1,26 @@
 package indexer
 
 import (
+	"fmt"
+	"go-search/conf"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/go-ego/riot/types"
 	"github.com/rosbit/go-wget"
-	"go-search/conf"
-	"net/http"
-	"strings"
-	"fmt"
-	"log"
-	"io"
-	"os"
 )
 
 // IndexJSON/IndexCSV/... 等从文件获取doc建索引的函数签名
-type FnIndexReader func(string,io.ReadCloser,...string)([]string,error)
+type FnIndexReader func(string, io.ReadCloser, ...string) ([]string, error)
 
 // IndexDoc/UpdateDoc: 更新一个doc
 type FnUpdateDoc func(index string, doc map[string]interface{}) (docId string, err error)
 
 // 把一个doc添加到索引库
-func IndexDoc(index string, doc map[string]interface{}) (docId string, err error) {
+func IndexDoc(index string, doc map[string]interface{}) (docID string, err error) {
 	if !running {
 		return "", fmt.Errorf("the service is stopped")
 	}
@@ -29,16 +30,16 @@ func IndexDoc(index string, doc map[string]interface{}) (docId string, err error
 		return "", fmt.Errorf("schema %s not found, please create schema first", index)
 	}
 
-	docId, err = idx.indexDoc(doc)
+	docID, err = idx.indexDoc(doc)
 	if err != nil {
 		return "", err
 	}
 	idx.flush()
-	return docId, nil
+	return docID, nil
 }
 
 // 更新一个doc，可以只更新出现的字段。如果doc不存在，更新会失败
-func UpdateDoc(index string, doc map[string]interface{}) (docId string, err error) {
+func UpdateDoc(index string, doc map[string]interface{}) (docID string, err error) {
 	if !running {
 		return "", fmt.Errorf("the service is stopped")
 	}
@@ -60,17 +61,17 @@ func UpdateDoc(index string, doc map[string]interface{}) (docId string, err erro
 	}
 	fmt.Printf("new doc: %v\n", existingDoc)
 
-	docId, err = idx.indexDoc(existingDoc)
+	docID, err = idx.indexDoc(existingDoc)
 	if err != nil {
 		return "", err
 	}
 	idx.flush()
-	return docId, nil
+	return docID, nil
 }
 
 // 把多个JSON(JSON数组)添加到索引库
 func IndexJSON(index string, in io.ReadCloser, cb ...string) (docIds []string, err error) {
-	return indexFromDocGenerator(index, in, fromJsonFile, cb...)
+	return indexFromDocGenerator(index, in, fromJSONFile, cb...)
 }
 
 // 把csv中的一行作为doc添加到索引库
@@ -84,7 +85,11 @@ func IndexJSONLines(index string, in io.ReadCloser, cb ...string) (docIds []stri
 }
 
 //从文件获取doc做索引的统一流程，不同的文件类型需要实现一个fnReaderGenerator
-func indexFromDocGenerator(index string, in io.ReadCloser, docGenerator fnReaderGenerator, cb ...string) (docIds []string, err error) {
+func indexFromDocGenerator(
+	index string,
+	in io.ReadCloser,
+	docGenerator fnReaderGenerator, cb ...string,
+) (docIds []string, err error) {
 	var idx *indexer
 	var docChan <-chan Doc
 
@@ -126,16 +131,15 @@ ERROR:
 }
 
 // 删除一个doc
-func DeleteDoc(index string, docId interface{}) error {
+func DeleteDoc(index string, docID interface{}) error {
 	if !running {
 		return fmt.Errorf("the service is stopped")
 	}
-
 	idx, err := initIndexer(index)
 	if err != nil {
 		return fmt.Errorf("schema %s not found, please create schema first", index)
 	}
-	idx.deleteDoc(fmt.Sprintf("%v", docId))
+	idx.deleteDoc(fmt.Sprintf("%v", docID))
 	idx.flush()
 	return nil
 }
@@ -150,8 +154,8 @@ func DeleteDocs(index string, docIds []interface{}) error {
 	if err != nil {
 		return fmt.Errorf("schema %s not found, please create schema first", index)
 	}
-	for _, docId := range docIds {
-		idx.deleteDoc(fmt.Sprintf("%v", docId))
+	for _, docID := range docIds {
+		idx.deleteDoc(fmt.Sprintf("%v", docID))
 	}
 	idx.flush()
 	return nil
@@ -211,27 +215,27 @@ func (idx *indexer) indexDoc(doc map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("pk field must be specified")
 	}
 
-	docId := strings.Builder{}
+	docID := strings.Builder{}
 	for i, idx := range pkIdx {
 		if i > 0 {
-			docId.WriteByte('_')
+			docID.WriteByte('_')
 		}
-		docId.WriteString(fmt.Sprintf("%v", pk[idx]))
+		docID.WriteString(fmt.Sprintf("%v", pk[idx]))
 	}
 
-	dId := docId.String()
+	dID := docID.String()
 	count := mergeTokenLocs(&tokens)
 	indexerChan <- &indexerOp{
-		op: _INDEX_DOC,
+		op:     _INDEX_DOC,
 		engine: engine,
-		docId: dId,
+		docID:  dID,
 		doc: &types.DocData{
 			Tokens: tokens[:count],
 			Fields: storedDoc,
 			Labels: allDocs,
 		},
 	}
-	return dId, nil
+	return dID, nil
 }
 
 //批量增加索引文档
@@ -250,7 +254,7 @@ func (idx *indexer) indexDocs(docs <-chan Doc, cb ...string) (docIds []string) {
 			continue
 		}
 
-		if docId, err := idx.indexDoc(doc.doc); err != nil {
+		if docID, err := idx.indexDoc(doc.doc); err != nil {
 			if !hasCb {
 				docIds = append(docIds, err.Error())
 			} else {
@@ -259,9 +263,9 @@ func (idx *indexer) indexDocs(docs <-chan Doc, cb ...string) (docIds []string) {
 			hasError = true
 		} else {
 			if !hasCb {
-				docIds = append(docIds, docId)
+				docIds = append(docIds, docID)
 			}
-			count += 1
+			count++
 		}
 	}
 
@@ -274,17 +278,17 @@ func (idx *indexer) indexDocs(docs <-chan Doc, cb ...string) (docIds []string) {
 		params := func() map[string]interface{} {
 			if hasError {
 				return map[string]interface{}{
-					"code": http.StatusInternalServerError,
-					"msg": "failed to index docs",
+					"code":  http.StatusInternalServerError,
+					"msg":   "failed to index docs",
 					"index": idx.schema.Name,
-					"docs": count,
+					"docs":  count,
 				}
 			}
 			return map[string]interface{}{
-				"code": http.StatusOK,
-				"msg": "OK",
+				"code":  http.StatusOK,
+				"msg":   "OK",
 				"index": idx.schema.Name,
-				"docs": count,
+				"docs":  count,
 			}
 		}
 
@@ -304,15 +308,15 @@ func buildIndexTokens(fieldIdx int, tokens []string, startLoc int) []types.Token
 	res := make([]types.TokenData, j*2)
 	for i, token := range tokens {
 		res[i] = types.TokenData{
-			Text: token,
-			Locations: []int{startLoc+i},
+			Text:      token,
+			Locations: []int{startLoc + i},
 		}
 
 		res[j] = types.TokenData{
-			Text: fmt.Sprintf("f%d:%s", fieldIdx, token),
-			Locations: []int{startLoc+j},
+			Text:      fmt.Sprintf("f%d:%s", fieldIdx, token),
+			Locations: []int{startLoc + j},
 		}
-		j += 1
+		j++
 	}
 
 	return res
@@ -324,14 +328,14 @@ func mergeTokenLocs(pTokens *[]types.TokenData) int {
 	pos := make(map[string]int, c) // token -> idx in tokens
 	count := 0
 
-	for i:=0; i<c; i++ {
+	for i := 0; i < c; i++ {
 		token := &tokens[i]
 		if idx, ok := pos[token.Text]; !ok {
 			pos[token.Text] = count
 			if count != i {
 				tokens[count] = *token
 			}
-			count += 1
+			count++
 		} else {
 			mToken := &tokens[idx]
 			mToken.Locations = append(mToken.Locations, token.Locations...)
@@ -340,11 +344,11 @@ func mergeTokenLocs(pTokens *[]types.TokenData) int {
 	return count
 }
 
-func (idx *indexer) deleteDoc(docId string) {
+func (idx *indexer) deleteDoc(docID string) {
 	indexerChan <- &indexerOp{
 		op:     _DELETE_DOC,
 		engine: idx.engine,
-		docId:  docId,
+		docID:  docID,
 	}
 }
 

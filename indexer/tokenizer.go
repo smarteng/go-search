@@ -1,9 +1,9 @@
 package indexer
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
-	"fmt"
 )
 
 var specialDelis = map[rune]bool{
@@ -13,7 +13,7 @@ var specialDelis = map[rune]bool{
 }
 
 func whitespaceTokenize(s string, keepIt ...rune) []string {
-	return tokenize_i(s, false, keepIt ...)
+	return tokenize_i(s, false, keepIt...)
 }
 
 func hanziTokenize(s string, keepIt ...rune) []string {
@@ -24,7 +24,6 @@ func tokenize_i(s string, breakHz bool, keepIt ...rune) []string {
 	if len(s) == 0 {
 		return []string{}
 	}
-
 	var kp map[rune]bool
 	if len(keepIt) > 0 {
 		kp = make(map[rune]bool, len(keepIt))
@@ -32,7 +31,6 @@ func tokenize_i(s string, breakHz bool, keepIt ...rune) []string {
 			kp[r] = true
 		}
 	}
-
 	tokens := []string{}
 	for token := range breakTokens(s, breakHz, kp) {
 		tokens = append(tokens, token)
@@ -48,16 +46,16 @@ func breakTokens(s string, breakHz bool, keepIt map[rune]bool) <-chan string {
 
 	var dumpToken = func() {
 		if sb.Len() > 0 {
-			var token  string
+			var token string
 			// fmt.Printf("keepIt: %v\n", keepIt)
 			if len(keepIt) == 0 {
-				token = strings.TrimFunc(sb.String(), func(ch rune)bool{
+				token = strings.TrimFunc(sb.String(), func(ch rune) bool {
 					_, ok := specialDelis[ch]
 					return ok
 				})
 			} else {
 				// fmt.Printf("sb.String(): %s\n", sb.String())
-				token = strings.TrimFunc(sb.String(), func(ch rune)bool{
+				token = strings.TrimFunc(sb.String(), func(ch rune) bool {
 					if _, ok := keepIt[ch]; ok {
 						return false
 					}
@@ -90,7 +88,6 @@ func breakTokens(s string, breakHz bool, keepIt map[rune]bool) <-chan string {
 					sb.WriteRune(ch)
 					break
 				}
-
 				hasQuote = true
 				quote = ch
 				dumpToken()
@@ -165,7 +162,7 @@ func fieldsKeepQuote(s string, deli ...rune) []string {
 		}
 	}
 
-	return strings.FieldsFunc(s, func(ch rune)bool{
+	return strings.FieldsFunc(s, func(ch rune) bool {
 		switch ch {
 		case '"', '\'', '`':
 			if hasQuote {

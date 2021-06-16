@@ -4,6 +4,6 @@
     "worker-num": 5,
     "timeout": 0,
     "root-dir": "./schema-home",
-	"lru-minutes": 1
+	"lru-minutes": 0 
 }
 

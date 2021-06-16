@@ -1,13 +1,14 @@
 package indexer
 
 import (
-	"github.com/go-ego/riot/types"
-	"strings"
 	"fmt"
+	"strings"
+
+	"github.com/go-ego/riot/types"
 )
 
 // 根据已有字段，组装成docid的过滤条件
-func (idx *indexer) makeDocIdFilters(doc map[string]interface{}) (filters string, err error) {
+func (idx *indexer) makeDocIDFilters(doc map[string]interface{}) (filters string, err error) {
 	pkIdx := idx.schema.PKIdx
 	fm := idx.schema.FieldMap
 	fields := idx.schema.Fields
@@ -25,7 +26,7 @@ func (idx *indexer) makeDocIdFilters(doc map[string]interface{}) (filters string
 
 		if field.PK {
 			pk[c] = fmt.Sprintf("%s:%v", fieldName, value)
-			c += 1
+			c++
 			if c >= pkCount {
 				break
 			}
@@ -38,7 +39,7 @@ func (idx *indexer) makeDocIdFilters(doc map[string]interface{}) (filters string
 }
 
 func (idx *indexer) getDoc(doc map[string]interface{}) (map[string]interface{}, error) {
-	filters, err := idx.makeDocIdFilters(doc)
+	filters, err := idx.makeDocIDFilters(doc)
 	if err != nil {
 		return nil, err
 	}

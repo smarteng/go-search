@@ -1,13 +1,14 @@
 package indexer
 
 import (
+	"encoding/gob"
+	"fmt"
+	"go-search/conf"
+	"log"
+	"time"
+
 	"github.com/go-ego/riot"
 	"github.com/go-ego/riot/types"
-	"go-search/conf"
-	"fmt"
-	"log"
-	"encoding/gob"
-	"time"
 )
 
 // 初始化/获取索引库
@@ -29,14 +30,14 @@ func initIndexer(index string) (*indexer, error) {
 
 	gob.Register(StoredDoc{})
 	engine := &riot.Engine{}
-	idx = &indexer{schema:schema, engine:engine}
+	idx = &indexer{schema: schema, engine: engine}
 	initOpts := types.EngineOpts{
-		UseStore:    len(conf.UseStore) > 0,
-		NotUseGse:   true,
+		UseStore:  len(conf.UseStore) > 0,
+		NotUseGse: true,
 		/*
-		StoreEngine: "bg",
-		StoreFolder: schema.StorePath,
-		NumShards:   int(schema.Shards),
+			StoreEngine: "bg",
+			StoreFolder: schema.StorePath,
+			NumShards:   int(schema.Shards),
 		*/
 		//IndexerOpts: &types.IndexerOpts{
 		//	IndexType: types.LocsIndex,
@@ -45,7 +46,7 @@ func initIndexer(index string) (*indexer, error) {
 	if len(conf.UseStore) > 0 {
 		initOpts.StoreEngine = conf.UseStore
 		initOpts.StoreFolder = schema.StorePath
-		initOpts.NumShards   = int(schema.Shards)
+		initOpts.NumShards = int(schema.Shards)
 	}
 	//if schema.NeedZhSeg {
 	//	segDict := &conf.ServiceConf.SegDict
@@ -94,24 +95,24 @@ const (
 )
 
 type indexerOp struct {
-	op      int
+	op     int
 	engine *riot.Engine
-	docId   string
+	docID  string
 	doc    *types.DocData
 }
 
 var (
 	indexerChan chan *indexerOp
-	stopChan chan struct{}
-	running bool
-	lruTicker *time.Ticker
+	stopChan    chan struct{}
+	running     bool
+	lruTicker   *time.Ticker
 )
 
 func StartIndexers(workNum int) {
 	indexerChan = make(chan *indexerOp, workNum)
 	stopChan = make(chan struct{})
 	running = true
-	for i:=0; i<workNum; i++ {
+	for i := 0; i < workNum; i++ {
 		go opThread(i)
 	}
 
@@ -136,7 +137,7 @@ func StopIndexers(workNum int) {
 		lruTicker.Stop()
 	}
 
-	for i:=0; i<workNum; i++ {
+	for i := 0; i < workNum; i++ {
 		<-stopChan
 	}
 
@@ -148,18 +149,18 @@ func StopIndexers(workNum int) {
 
 func opThread(workNo int) {
 	for opData := range indexerChan {
-		op, engine, docId, doc := opData.op, opData.engine, opData.docId, opData.doc
+		op, engine, docID, doc := opData.op, opData.engine, opData.docID, opData.doc
 		switch op {
 		case _INDEX_DOC:
-			engine.IndexDoc(docId, *doc, true)
+			engine.IndexDoc(docID, *doc, true)
 		case _DELETE_DOC:
-			engine.RemoveDoc(docId, true)
+			engine.RemoveDoc(docID, true)
 		case _FLUSH_DOC:
 			engine.Flush()
 		}
 	}
 
-	stopChan <-struct{}{}
+	stopChan <- struct{}{}
 }
 
 func lruThread() {

@@ -1,9 +1,9 @@
 package indexer
 
 import (
-	"io"
 	"encoding/csv"
 	"encoding/json"
+	"io"
 )
 
 type Doc struct {
@@ -28,7 +28,7 @@ func fromArray(docs []map[string]interface{}) (<-chan Doc, error) {
 }
 
 //从JSON数组文件依次获取doc
-func fromJsonFile(in io.Reader) (<-chan Doc, error) {
+func fromJSONFile(in io.Reader) (<-chan Doc, error) {
 	dec := json.NewDecoder(in)
 	var docs []map[string]interface{}
 	if err := dec.Decode(&docs); err != nil {
@@ -96,4 +96,3 @@ func fromJsonLines(in io.Reader) (<-chan Doc, error) {
 
 	return docChan, nil
 }
-

@@ -1,16 +1,17 @@
 package indexer
 
 import (
-	"github.com/hashicorp/golang-lru"
 	"go-search/conf"
-	"time"
-	"sync"
 	"log"
+	"sync"
+	"time"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
-	lruAccess *lru.Cache
-	tooOldLock = &sync.Mutex{}
+	lruAccess   *lru.Cache
+	tooOldLock  = &sync.Mutex{}
 	tooOldIndex = map[string]time.Time{}
 )
 
@@ -58,7 +59,7 @@ func LruRemove(index string) {
 	tooOldLock.Unlock()
 }
 
-func lruGet(timeLimit time.Time) (chan string) {
+func lruGet(timeLimit time.Time) chan string {
 	if conf.ServiceConf.LruMinutes <= 0 {
 		return nil
 	}
@@ -73,7 +74,7 @@ func lruGet(timeLimit time.Time) (chan string) {
 		for k, v := range tooOldIndex {
 			if v.Before(timeLimit) {
 				indexes[count] = k
-				count += 1
+				count++
 			}
 		}
 		if count > 0 {
@@ -102,4 +103,3 @@ func lruGet(timeLimit time.Time) (chan string) {
 
 	return res
 }
-

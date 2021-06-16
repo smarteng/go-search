@@ -6,9 +6,9 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"go-search/conf"
+	"os"
 )
 
 // variables set via go build -ldflags
@@ -20,10 +20,10 @@ var (
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-v" {
-		ShowInfo("name",       os.Args[0])
+		ShowInfo("name", os.Args[0])
 		ShowInfo("build time", buildTime)
-		ShowInfo("os name",    osInfo)
-		ShowInfo("compiler",   goInfo)
+		ShowInfo("os name", osInfo)
+		ShowInfo("compiler", goInfo)
 		return
 	}
 

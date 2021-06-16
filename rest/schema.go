@@ -1,11 +1,12 @@
 package rest
 
 import (
-	"github.com/rosbit/http-helper"
-	"net/http"
 	"fmt"
 	"go-search/conf"
 	"go-search/indexer"
+	"net/http"
+
+	helper "github.com/rosbit/http-helper"
 )
 
 // POST /schema/:index
@@ -24,29 +25,30 @@ import (
 //   {schema-json-content}
 func CreateSchema(c *helper.Context) {
 	if !indexer.IsRunning() {
-		c.Error(http.StatusInternalServerError, "service is stopped")
+		_ = c.Error(http.StatusInternalServerError, "service is stopped")
 		return
 	}
 	index := c.Param("index")
 	if _, err := conf.LoadSchema(index); err == nil {
-		c.Error(http.StatusInternalServerError, fmt.Sprintf("schema of index %s exists already, please remove it first", index))
+		errStr := fmt.Sprintf("schema of index %s exists already, please remove it first", index)
+		_ = c.Error(http.StatusInternalServerError, errStr)
 		return
 	}
 
 	jsonFile, _, _, err := getReader(c, "file")
 	if err != nil {
-		c.Error(http.StatusBadRequest, err.Error())
+		_ = c.Error(http.StatusBadRequest, err.Error())
 		return
 	}
 	defer jsonFile.Close()
 
 	if err := conf.SaveSchema(index, jsonFile); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"code": http.StatusOK,
-		"msg": "schema created",
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
+		"code":  http.StatusOK,
+		"msg":   "schema created",
 		"index": index,
 	})
 }
@@ -62,13 +64,13 @@ func DeleteSchema(c *helper.Context) {
 
 	indexer.RemoveIndexer(index)
 	if err := conf.DeleteSchema(index); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"code": http.StatusOK,
-		"msg": "schema deleted",
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
+		"code":  http.StatusOK,
+		"msg":   "schema deleted",
 		"index": index,
 	})
 }
@@ -82,9 +84,9 @@ func DeleteSchema(c *helper.Context) {
 func ShowSchema(c *helper.Context) {
 	index := c.Param("index")
 	if schema, err := conf.LoadSchema(index); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 	} else {
-		c.JSON(http.StatusOK, schema.SchemaConf)
+		_ = c.JSON(http.StatusOK, schema.SchemaConf)
 	}
 }
 
@@ -99,11 +101,11 @@ func RenameSchema(c *helper.Context) {
 	index := c.Param("index")
 	newIndex := c.Param("newIndex")
 	if _, err := conf.LoadSchema(index); err != nil {
-		c.Error(http.StatusNotFound, fmt.Sprintf("index %s not found", index))
+		_ = c.Error(http.StatusNotFound, fmt.Sprintf("index %s not found", index))
 		return
 	}
 	if _, err := conf.LoadSchema(newIndex); err == nil {
-		c.Error(http.StatusInternalServerError, fmt.Sprintf("index %s alreday exists", newIndex))
+		_ = c.Error(http.StatusInternalServerError, fmt.Sprintf("index %s alreday exists", newIndex))
 		return
 	}
 
@@ -111,12 +113,12 @@ func RenameSchema(c *helper.Context) {
 	indexer.RemoveIndexer(index)
 
 	if err := conf.RenameSchema(index, newIndex); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
 		"code": http.StatusOK,
-		"msg": fmt.Sprintf("index %s renamed to %s OK", index, newIndex),
+		"msg":  fmt.Sprintf("index %s renamed to %s OK", index, newIndex),
 	})
 }

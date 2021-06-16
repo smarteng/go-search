@@ -1,10 +1,10 @@
 package rest
 
 import (
-	"io"
-	"os"
-	"io/ioutil"
 	"go-search/conf"
+	"io"
+	"io/ioutil"
+	"os"
 )
 
 func saveTmpFile(in io.ReadCloser) (string, io.ReadCloser, error) {

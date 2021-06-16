@@ -1,9 +1,10 @@
 package rest
 
 import (
-	"github.com/rosbit/http-helper"
 	"go-search/indexer"
 	"net/http"
+
+	helper "github.com/rosbit/http-helper"
 )
 
 // PUT /doc/:index
@@ -37,18 +38,18 @@ func updateDoc(c *helper.Context, fnUpdateDoc indexer.FnUpdateDoc, okStr string)
 
 	var doc map[string]interface{}
 	if code, err := c.ReadJSON(&doc); err != nil {
-		c.Error(code, err.Error())
+		_ = c.Error(code, err.Error())
 		return
 	}
-	docId, err := fnUpdateDoc(index, doc)
+	docID, err := fnUpdateDoc(index, doc)
 	if err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
 		"code": http.StatusOK,
-		"msg": okStr,
-		"id": docId,
+		"msg":  okStr,
+		"id":   docID,
 	})
 }
 
@@ -90,7 +91,7 @@ func IndexDocs(c *helper.Context) {
 
 	in, contentType, ext, err := getReader(c, "file")
 	if err != nil {
-		c.Error(http.StatusNotAcceptable, err.Error())
+		_ = c.Error(http.StatusNotAcceptable, err.Error())
 		return
 	}
 	defer in.Close()
@@ -111,24 +112,24 @@ func IndexDocs(c *helper.Context) {
 	if cb == "" {
 		docIds, err := indexReader(index, in)
 		if err != nil && docIds != nil {
-			c.Error(http.StatusInternalServerError, err.Error())
+			_ = c.Error(http.StatusInternalServerError, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, map[string]interface{}{
+		_ = c.JSON(http.StatusOK, map[string]interface{}{
 			"code": http.StatusOK,
-			"msg": "docs added to index",
-			"ids": docIds,
+			"msg":  "docs added to index",
+			"ids":  docIds,
 		})
 	} else {
 		tmpName, inTmp, err := saveTmpFile(in)
 		if err != nil {
-			c.Error(http.StatusInternalServerError, err.Error())
+			_ = c.Error(http.StatusInternalServerError, err.Error())
 			return
 		}
 		indexReader(index, inTmp, cb, tmpName)
-		c.JSON(http.StatusOK, map[string]interface{}{
+		_ = c.JSON(http.StatusOK, map[string]interface{}{
 			"code": http.StatusOK,
-			"msg": "indexing request accepted",
+			"msg":  "indexing request accepted",
 		})
 	}
 }

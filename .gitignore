@@ -1,0 +1,6 @@
+.vscode
+composer.lock
+.DS_Store
+go.sum
+go-search
+schema-home

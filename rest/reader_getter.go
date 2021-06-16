@@ -1,15 +1,16 @@
 package rest
 
 import (
-	"github.com/rosbit/http-helper"
-	"io"
 	"fmt"
+	"io"
 	"path"
 	"strings"
+
+	helper "github.com/rosbit/http-helper"
 )
 
 func getReader(c *helper.Context, multipartFileParam string) (in io.ReadCloser, contentType, ext string, err error) {
-	ct := strings.FieldsFunc(c.Header(HEADER_CONTENT_TYPE), func(ch rune)bool{
+	ct := strings.FieldsFunc(c.Header(HEADER_CONTENT_TYPE), func(ch rune) bool {
 		return ch == ' ' || ch == ';'
 	})
 	if len(ct) > 0 {

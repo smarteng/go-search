@@ -1,9 +1,10 @@
 package rest
 
 import (
-	"github.com/rosbit/http-helper"
-	"net/http"
 	"go-search/indexer"
+	"net/http"
+
+	helper "github.com/rosbit/http-helper"
 )
 
 // DELETE /doc/:index
@@ -15,21 +16,21 @@ import (
 func DeleteDoc(c *helper.Context) {
 	index := c.Param("index")
 	var doc struct {
-		Id interface{} `json:"id"`
+		ID interface{} `json:"id"`
 	}
 	if code, err := c.ReadJSON(&doc); err != nil {
-		c.Error(code, err.Error())
+		_ = c.Error(code, err.Error())
 		return
 	}
-	if err := indexer.DeleteDoc(index, doc.Id); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+	if err := indexer.DeleteDoc(index, doc.ID); err != nil {
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
 		"code": http.StatusOK,
-		"msg": "doc removed from index",
-		"id":   doc.Id,
+		"msg":  "doc removed from index",
+		"id":   doc.ID,
 	})
 }
 
@@ -44,18 +45,18 @@ func DeleteDocs(c *helper.Context) {
 
 	var docIds []interface{}
 	if code, err := c.ReadJSON(&docIds); err != nil {
-		c.Error(code, err.Error())
+		_ = c.Error(code, err.Error())
 		return
 	}
 
 	if err := indexer.DeleteDocs(index, docIds); err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		_ = c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	_ = c.JSON(http.StatusOK, map[string]interface{}{
 		"code": http.StatusOK,
-		"msg": "docs removed from index",
-		"ids": docIds,
+		"msg":  "docs removed from index",
+		"ids":  docIds,
 	})
 }

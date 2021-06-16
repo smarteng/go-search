@@ -1,8 +1,8 @@
 package indexer
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 var stringsToParse = []string{
@@ -19,7 +19,7 @@ var stringsToParse = []string{
 	`f:+"实在" -有意思`,
 }
 
-func test_tokenize(tokenize func(string,...rune)[]string) {
+func test_tokenize(tokenize func(string, ...rune) []string) {
 	fmt.Printf(" --- token with keeping '+', '-', ':', ',' ... ---\n")
 	for _, s := range stringsToParse {
 		tokens := tokenize(s, '+', '-', ':', ',')

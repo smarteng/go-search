@@ -9,7 +9,8 @@
 //            "pk": true|false, // 属于PK的字段一定会保存
 //            "type": "string"|"i8"|"u8"|...|"float"|"date"|"datetime"|"time"|"timestamp", // timestamp单位秒，是i64的别名
 //            "tokenizer": "zh"|"space"|"none"|null, // 分词器：中文、空白、不需要；只有字符串有效
-//            "time-fmt": "",    // 当type是date,datetime,time时的格式串，缺省分别为"YYYY-MM-DD", "YYYY-MM-DD HH:MM:SS", "HH:MM:SS"，可以精确到毫秒
+//            "time-fmt": "",    // 当type是date,datetime,time时的格式串，
+// 								 缺省分别为"YYYY-MM-DD", "YYYY-MM-DD HH:MM:SS", "HH:MM:SS"，可以精确到毫秒
 //            "sorting": "desc"|"asc"  // 参与没有排序条件时的缺省排序
 //        },
 //        {
@@ -21,15 +22,15 @@
 package conf
 
 import (
-	"path"
-	"fmt"
-	"os"
-	"io"
-	"time"
 	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"reflect"
 	"strconv"
 	"strings"
-	"reflect"
+	"time"
 )
 
 // 各种分词器
@@ -42,18 +43,18 @@ const (
 var (
 	// 所有合法的类型名
 	validTypes = map[string]bool{
-		"str":true,"string":true,
-		"i8":true, "i16":true, "i32":true, "i64":true, "int":true, "integer":true,
-		"u8":true, "u16":true, "u32":true, "u64":true, "uint":true,
-		"f32": true, "f64":true, "float":true,
-		"bool":true, "boolean":true,
-		"date":true, "datetime":true, "time":true,"timestamp":true,
-		"json":true,
+		"str": true, "string": true,
+		"i8": true, "i16": true, "i32": true, "i64": true, "int": true, "integer": true,
+		"u8": true, "u16": true, "u32": true, "u64": true, "uint": true,
+		"f32": true, "f64": true, "float": true,
+		"bool": true, "boolean": true,
+		"date": true, "datetime": true, "time": true, "timestamp": true,
+		"json": true,
 	}
 
-	defaultTimeLayouts = map[string]string {
-		"date": "2006-01-02",
-		"time": "15:04:05",
+	defaultTimeLayouts = map[string]string{
+		"date":     "2006-01-02",
+		"time":     "15:04:05",
 		"datetime": "2006-01-02 15:04:05",
 	}
 )
@@ -70,8 +71,8 @@ type Field struct {
 
 // schema字段列表
 type SchemaConf struct {
-	Shards  uint16  `json:"shards"`
-	Fields  []Field `json:"fields"`
+	Shards uint16  `json:"shards"`
+	Fields []Field `json:"fields"`
 }
 
 // 缺省排序列表
@@ -83,7 +84,7 @@ type DefSorting struct {
 // schema定义，一个索引库一个schema
 type Schema struct {
 	// 索引库名称
-	Name      string
+	Name string
 
 	// 保存索引库的路径
 	StorePath string
@@ -92,7 +93,7 @@ type Schema struct {
 	*SchemaConf
 
 	// 字段名 -> 字段序号
-	FieldMap  map[string]int
+	FieldMap map[string]int
 
 	// PK字段的序号，PK可以是组合
 	PKIdx []int
@@ -213,69 +214,69 @@ func (field *Field) ToNativeValue(value interface{}) (interface{}, error) {
 		}
 		return fmt.Sprintf("%v", value), nil
 	case "i8":
-		if i, err := toInt(value); err != nil {
+		i, err := toInt(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return int8(i), nil
 		}
+		return int8(i), nil
 	case "i16":
-		if i, err := toInt(value); err != nil {
+		i, err := toInt(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return int16(i), nil
 		}
+		return int16(i), nil
 	case "i32":
-		if i, err := toInt(value); err != nil {
+		i, err := toInt(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return int32(i), nil
 		}
+		return int32(i), nil
 	case "i64", "timestamp":
 		return toInt(value)
 	case "int", "integer":
-		if i, err := toInt(value); err != nil {
+		i, err := toInt(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return int(i), nil
 		}
+		return int(i), nil
 	case "u8":
-		if i, err := toUint(value); err != nil {
+		i, err := toUint(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return uint8(i), nil
 		}
+		return uint8(i), nil
 	case "u16":
-		if i, err := toUint(value); err != nil {
+		i, err := toUint(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return uint16(i), nil
 		}
+		return uint16(i), nil
 	case "u32":
-		if i, err := toUint(value); err != nil {
+		i, err := toUint(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return uint32(i), nil
 		}
+		return uint32(i), nil
 	case "u64":
 		return toUint(value)
 	case "uint":
-		if i, err := toUint(value); err != nil {
+		i, err := toUint(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return uint(i), nil
 		}
+		return uint(i), nil
 	case "f32":
-		if i, err := toFloat(value); err != nil {
+		i, err := toFloat(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return float32(i), nil
 		}
+		return float32(i), nil
 	case "f64", "float":
-		if i, err := toFloat(value); err != nil {
+		i, err := toFloat(value)
+		if err != nil {
 			return nil, err
-		} else {
-			return float64(i), nil
 		}
+		return float64(i), nil
 	case "date", "datetime", "time":
 		return toDatetime(value, field.TimeFmt)
 	case "bool", "boolean":
@@ -347,7 +348,8 @@ func toFloat(v interface{}) (float64, error) {
 	}
 }
 
-var trueVals = map[string]bool{"yes":true, "y":true, "true": true}
+var trueVals = map[string]bool{"yes": true, "y": true, "true": true}
+
 func toBool(v interface{}) (bool, error) {
 	if v == nil {
 		return false, nil
@@ -365,7 +367,7 @@ func toBool(v interface{}) (bool, error) {
 		if i, err := strconv.Atoi(s); err == nil {
 			return i != 0, nil
 		} else {
-			_, ok := trueVals[strings.ToLower(s)];
+			_, ok := trueVals[strings.ToLower(s)]
 			return ok, nil
 		}
 	default:
@@ -406,7 +408,7 @@ func createDir(d string) error {
 		return os.Mkdir(d, 0755)
 	}
 	if !fi.IsDir() {
-		return fmt.Errorf("%s is not a directory")
+		return fmt.Errorf("%s is not a directory", d)
 	}
 	return nil
 }
@@ -417,7 +419,10 @@ func generateSchemaFile(index string) (d, f string) {
 	return
 }
 
-func checkSchemaConf(name string, schemaConf *SchemaConf) (map[string]int, []int, []DefSorting, map[string]int, bool, error) {
+func checkSchemaConf(
+	name string,
+	schemaConf *SchemaConf,
+) (map[string]int, []int, []DefSorting, map[string]int, bool, error) {
 	if schemaConf.Fields == nil || len(schemaConf.Fields) == 0 {
 		return nil, nil, nil, nil, false, fmt.Errorf("no fields found in %s schema file", name)
 	}
@@ -428,7 +433,7 @@ func checkSchemaConf(name string, schemaConf *SchemaConf) (map[string]int, []int
 	pi := []int{}
 	var defSorting []DefSorting
 	ti := make(map[string]int, l)
-	for i:=0; i<l; i++ {
+	for i := 0; i < l; i++ {
 		field := &schemaConf.Fields[i]
 		if field.Name == "" {
 			return nil, nil, nil, nil, false, fmt.Errorf("no name for field #%d in %s schema file", i, name)
@@ -438,11 +443,12 @@ func checkSchemaConf(name string, schemaConf *SchemaConf) (map[string]int, []int
 		}
 
 		switch field.Type {
-		case "": field.Type = "str"
+		case "":
+			field.Type = "str"
 		case "date", "time", "datetime":
 			ti[field.Name] = i
 			if field.TimeFmt == "" {
-				field.TimeFmt, _ = defaultTimeLayouts[field.Type]
+				field.TimeFmt = defaultTimeLayouts[field.Type]
 			}
 		default:
 			if _, ok := validTypes[field.Type]; !ok {
@@ -451,10 +457,12 @@ func checkSchemaConf(name string, schemaConf *SchemaConf) (map[string]int, []int
 		}
 
 		switch field.Tokenizer {
-		case ZH_TOKENIZER: needZhSeg = true
+		case ZH_TOKENIZER:
+			needZhSeg = true
 		case WS_TOKENIZER:
 		case NONE_TOKENIZER:
-		case "": field.Tokenizer = WS_TOKENIZER
+		case "":
+			field.Tokenizer = WS_TOKENIZER
 		default:
 			return nil, nil, nil, nil, false, fmt.Errorf("unknown tokenizer %s in field name %s", field.Tokenizer, field.Name)
 		}
@@ -466,12 +474,12 @@ func checkSchemaConf(name string, schemaConf *SchemaConf) (map[string]int, []int
 		switch field.Sorting {
 		case "desc":
 			defSorting = append(defSorting, DefSorting{
-				FieldIdx: i,
+				FieldIdx:  i,
 				Ascending: false,
 			})
 		case "asc":
 			defSorting = append(defSorting, DefSorting{
-				FieldIdx: i,
+				FieldIdx:  i,
 				Ascending: true,
 			})
 		default:

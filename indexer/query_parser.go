@@ -1,9 +1,9 @@
 package indexer
 
 import (
-	"strings"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // 把输入的query参数进行解析，这一步和具体的搜索引擎没有关系
@@ -42,13 +42,13 @@ func parseQuery(q, fq, s, f, page, pagesize, fl string) (*parsedQuery, error) {
 	}
 
 	return &parsedQuery{
-		query:   qRes,
-		labels:  qLabels,
-		fquerys: fqRes,
-		sortBys: sRes,
-		filters: fRes,
-		start:   nStart,
-		rows:    nRows,
+		query:        qRes,
+		labels:       qLabels,
+		fquerys:      fqRes,
+		sortBys:      sRes,
+		filters:      fRes,
+		start:        nStart,
+		rows:         nRows,
 		outFieldList: flRes,
 	}, nil
 }
@@ -107,7 +107,7 @@ func parseFq(fq string) ([]fquery, error) {
 		if q == nil {
 			continue
 		}
-		res = append(res, fquery{fieldName: f[:pos], query:q})
+		res = append(res, fquery{fieldName: f[:pos], query: q})
 	}
 
 	if len(res) == 0 {
@@ -118,21 +118,22 @@ func parseFq(fq string) ([]fquery, error) {
 
 // s: f1:desc,f2:asc
 func parseS(s string) []sorting {
-	fs := strings.FieldsFunc(s, func(c rune)bool{return (c==',' || c == ';')})
+	fs := strings.FieldsFunc(s, func(c rune) bool { return (c == ',' || c == ';') })
 
 	res := []sorting{}
 	for _, f := range fs {
-		ss := strings.FieldsFunc(f, func(c rune)bool{return (c==':'||c==' ')})
+		ss := strings.FieldsFunc(f, func(c rune) bool { return (c == ':' || c == ' ') })
 		if len(ss) == 0 || ss[0] == "" {
 			continue
 		}
 
 		switch len(ss) {
-		case 1: res = append(res, sorting{fieldName: ss[0]})
+		case 1:
+			res = append(res, sorting{fieldName: ss[0]})
 		default:
 			switch ss[1] {
 			case "asc":
-				res = append(res, sorting{fieldName: ss[0], asc:true})
+				res = append(res, sorting{fieldName: ss[0], asc: true})
 			default:
 				res = append(res, sorting{fieldName: ss[0]})
 			}
@@ -145,9 +146,9 @@ func parseS(s string) []sorting {
 	return res
 }
 
-// f: f1:filter1,filter2;f2:filter1,filter2;f3:r1~r2,r3~r4
+// f: f1:filter1,filter2|f2:filter1,filter2|f3:r1~r2,r3~r4
 func parseF(f string) ([]filter, error) {
-	fs := fieldsKeepQuote(f, ';')
+	fs := fieldsKeepQuote(f, '|')
 	if len(fs) == 0 {
 		return nil, nil
 	}
@@ -159,7 +160,7 @@ func parseF(f string) ([]filter, error) {
 			continue
 		}
 
-		fRes := filter{fieldName: f[:pos], conds:[]interface{}{}, ranges:[]range_{}}
+		fRes := filter{fieldName: f[:pos], conds: []interface{}{}, ranges: []scope{}}
 		conds := fieldsKeepQuote(f[pos+1:], ',')
 		for _, cond := range conds {
 			if len(cond) == 0 {
@@ -168,7 +169,7 @@ func parseF(f string) ([]filter, error) {
 			pos := strings.Index(cond, "~")
 			if pos >= 0 {
 				// range
-				fRes.ranges = append(fRes.ranges, range_{
+				fRes.ranges = append(fRes.ranges, scope{
 					from: cond[:pos],
 					to:   cond[pos+1:],
 				})
@@ -191,7 +192,7 @@ func parseF(f string) ([]filter, error) {
 
 // fl: f1,f2,...
 func parseFl(fl string) []string {
-	l := strings.FieldsFunc(fl, func(c rune)bool{return (c==',' || c==' ')})
+	l := strings.FieldsFunc(fl, func(c rune) bool { return (c == ',' || c == ' ') })
 	if len(l) == 0 {
 		return nil
 	}

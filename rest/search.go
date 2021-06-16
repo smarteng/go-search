@@ -1,16 +1,17 @@
 package rest
 
 import (
-	"github.com/rosbit/http-helper"
-	"go-search/indexer"
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"go-search/indexer"
 	"io"
 	"log"
+	"net/http"
+
+	helper "github.com/rosbit/http-helper"
 )
 
-// GET /search/:index?q=+xxx -xxx xxx&s=f1:desc,f2:asc&page=xx&pagesize=xx&f=f1:xxx,r1~r2;f2:r1~r2&fq=f:q-in-field&fl=f1,f2&pretty
+// GET /search/:index?q=+xxx&s=f1:desc,f2:asc&page=xx&pagesize=xx&f=f1:xxx|f2:r1~r2&fq=f:q-in-field&fl=f1,f2&pretty
 //
 // 搜索、过滤、排序、输出字段
 //
@@ -18,7 +19,8 @@ import (
 //  q:  查询条件，+xxx:必出现、-xxx"必不出现、xxx:可以出现
 //  fq: 指定字段的q，格式为"字段名:q"，多个fq间用','或';'分割，如fq=name:rosbit;age:10
 //  s:  排序字段，格式为"字段名[:desc|asc]"，多个s间用','或';'分割，如s=name;age:asc
-//  f:  过滤，支持区间，格式为"字段名:val1,val2,min~max"，min/max可以只出现一个，多个f间用';'分割，如s=name:rosbit,bitros;age:10,16~20,~8,30~
+//  f:  过滤，支持区间，格式为"字段名:val1,val2,min~max"，min/max可以只出现一个，多个f间用'|'分割，
+//  f 示例 f=name:rosbit,bitros;age:10,16~20,~8,30~
 //  page: 页码，从1开始
 //  pagesize: 每页条数，最大100
 //  fl: 输出字段列表，多个字段名用','分割
@@ -48,12 +50,12 @@ func Search(c *helper.Context) {
 	log.Printf("[query] %s\n", c.Request().RequestURI)
 	index := c.Param("index")
 
-	q  := c.QueryParam("q")
+	q := c.QueryParam("q")
 	fq := c.QueryParam("fq")
-	s  := c.QueryParam("s")
-	f  := c.QueryParam("f")
+	s := c.QueryParam("s")
+	f := c.QueryParam("f")
 	page := c.QueryParam("page")
-	pagesize  := c.QueryParam("pagesize")
+	pagesize := c.QueryParam("pagesize")
 	fl := c.QueryParam("fl")
 	_, pretty := c.QueryParams()["pretty"]
 
@@ -77,7 +79,7 @@ func outputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, timeout b
 	je := json.NewEncoder(w)
 
 	fmt.Fprintf(w, `{"code":%d,"msg":"OK","result":{"timeout":%v,"pagination":`, http.StatusOK, timeout)
-	je.Encode(pagination)
+	_ = je.Encode(pagination)
 	fmt.Fprintf(w, `,"docs":`)
 	count := 0
 	if docs != nil {
@@ -88,8 +90,8 @@ func outputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, timeout b
 				fmt.Fprintf(w, ",")
 			}
 
-			je.Encode(doc)
-			count += 1
+			_ = je.Encode(doc)
+			count++
 		}
 	}
 
@@ -103,7 +105,7 @@ func outputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, timeout b
 
 func prettyOutputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, timeout bool, docs <-chan interface{}) {
 	fmt.Fprintf(w,
-`{
+		`{
   "code": %d,
   "msg": "OK",
   "result": {
@@ -111,28 +113,28 @@ func prettyOutputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, tim
     "pagination": `, http.StatusOK, timeout)
 
 	b, _ := json.MarshalIndent(pagination, "    ", "    ")
-	w.Write(b)
+	_, _ = w.Write(b)
 
-	io.WriteString(w, `,
+	_, _ = io.WriteString(w, `,
     "docs": `)
 
 	count := 0
 	if docs != nil {
 		for doc := range docs {
 			if count == 0 {
-				io.WriteString(w, "[\n      ")
+				_, _ = io.WriteString(w, "[\n      ")
 			} else {
-				io.WriteString(w, ",\n      ")
+				_, _ = io.WriteString(w, ",\n      ")
 			}
 
 			b, _ = json.MarshalIndent(doc, "      ", "    ")
-			w.Write(b)
-			count += 1
+			_, _ = w.Write(b)
+			count++
 		}
 	}
 
 	if count == 0 {
-		io.WriteString(w, "null")
+		_, _ = io.WriteString(w, "null")
 	} else {
 		fmt.Fprintf(w, "\n    ]")
 	}
@@ -140,5 +142,5 @@ func prettyOutputJSONDocByDoc(w http.ResponseWriter, pagination interface{}, tim
 	fmt.Fprintf(w, `
   }
 }
-`   )
+`)
 }
