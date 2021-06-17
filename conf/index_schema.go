@@ -38,6 +38,13 @@ const (
 	ZhTokenizer   = "zh"
 	WsTokenizer   = "space" // default tokenizer
 	NoneTokenizer = "none"
+
+	// type
+	DateType      = "date"
+	DateTimeType  = "datetime"
+	TimeType      = "time"
+	StringType    = "string"
+	StringStrType = "str"
 )
 
 var (
@@ -196,7 +203,7 @@ func (field *Field) FormatDatetime(v interface{}) interface{} {
 	}
 
 	switch field.Type {
-	case "date", "datetime", "time":
+	case DateType, DateTimeType, TimeType:
 		return time.Unix(0, nsec).In(Loc).Format(field.TimeFmt)
 	default:
 		return nil
@@ -208,7 +215,7 @@ func (field *Field) FormatDatetime(v interface{}) interface{} {
 // 返回的数据中已经是经过转换的数据
 func (field *Field) ToNativeValue(value interface{}) (interface{}, error) {
 	switch field.Type {
-	case "str", "string":
+	case StringStrType, StringType:
 		if value == nil {
 			return "", nil
 		}
@@ -277,7 +284,7 @@ func (field *Field) ToNativeValue(value interface{}) (interface{}, error) {
 			return nil, err
 		}
 		return float64(i), nil
-	case "date", "datetime", "time":
+	case DateType, DateTimeType, TimeType:
 		return toDatetime(value, field.TimeFmt)
 	case "bool", "boolean":
 		return toBool(value)
@@ -292,15 +299,14 @@ func toInt(v interface{}) (int64, error) {
 	if v == nil {
 		return 0, nil
 	}
-	switch v.(type) {
+	switch i := v.(type) {
 	case float64:
-		return int64(v.(float64)), nil
+		return int64(i), nil
 	case string:
-		s := v.(string)
-		if s == "" {
+		if i == "" {
 			return 0, nil
 		}
-		return strconv.ParseInt(s, 10, 64)
+		return strconv.ParseInt(i, 10, 64)
 	case int8, int16, int32, int64, int:
 		return reflect.ValueOf(v).Int(), nil
 	default:
@@ -312,15 +318,14 @@ func toUint(v interface{}) (uint64, error) {
 	if v == nil {
 		return 0, nil
 	}
-	switch v.(type) {
+	switch i := v.(type) {
 	case float64:
-		return uint64(v.(float64)), nil
+		return uint64(i), nil
 	case string:
-		s := v.(string)
-		if s == "" {
+		if i == "" {
 			return 0, nil
 		}
-		return strconv.ParseUint(s, 10, 64)
+		return strconv.ParseUint(i, 10, 64)
 	case uint8, uint16, uint32, uint64, uint:
 		return reflect.ValueOf(v).Uint(), nil
 	default:
@@ -332,17 +337,16 @@ func toFloat(v interface{}) (float64, error) {
 	if v == nil {
 		return float64(0), nil
 	}
-	switch v.(type) {
+	switch i := v.(type) {
 	case float64:
-		return v.(float64), nil
+		return i, nil
 	case float32:
-		return float64(v.(float32)), nil
+		return float64(i), nil
 	case string:
-		s := v.(string)
-		if s == "" {
+		if i == "" {
 			return float64(0), nil
 		}
-		return strconv.ParseFloat(s, 64)
+		return strconv.ParseFloat(i, 64)
 	default:
 		return 0.0, fmt.Errorf("can not convert %v to float64", v)
 	}
@@ -354,21 +358,20 @@ func toBool(v interface{}) (bool, error) {
 	if v == nil {
 		return false, nil
 	}
-	switch v.(type) {
+	switch b := v.(type) {
 	case bool:
-		return v.(bool), nil
+		return b, nil
 	case float64:
-		return int(v.(float64)) != 0, nil
+		return int(b) != 0, nil
 	case string:
-		s := v.(string)
-		if s == "" {
+		if b == "" {
 			return false, nil
 		}
-		i, err := strconv.Atoi(s)
+		i, err := strconv.Atoi(b)
 		if err == nil {
 			return i != 0, nil
 		}
-		_, ok := trueVals[strings.ToLower(s)]
+		_, ok := trueVals[strings.ToLower(b)]
 		return ok, nil
 	default:
 		return false, fmt.Errorf("can not convert %v to boolean", v)
@@ -379,11 +382,11 @@ func toDatetime(v interface{}, timeFmt string) (int64, error) {
 	if v == nil {
 		return 0, nil
 	}
-	switch v.(type) {
+	switch i := v.(type) {
 	case float64:
-		return int64(v.(float64)), nil
+		return int64(i), nil
 	case string:
-		t, err := time.ParseInLocation(timeFmt, v.(string), Loc)
+		t, err := time.ParseInLocation(timeFmt, i, Loc)
 		if err != nil {
 			return 0, err
 		}
@@ -445,7 +448,7 @@ func checkSchemaConf(
 		switch field.Type {
 		case "":
 			field.Type = "str"
-		case "date", "time", "datetime":
+		case DateType, TimeType, DateTimeType:
 			ti[field.Name] = i
 			if field.TimeFmt == "" {
 				field.TimeFmt = defaultTimeLayouts[field.Type]

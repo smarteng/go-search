@@ -89,9 +89,9 @@ func RemoveIndexer(index string) {
 // -------------------------------------
 
 const (
-	_INDEX_DOC = iota
-	_DELETE_DOC
-	_FLUSH_DOC
+	TypeIndexDoc = iota
+	TypeDeleteDoc
+	TypeFlushDoc
 )
 
 type indexerOp struct {
@@ -151,11 +151,11 @@ func opThread(workNo int) {
 	for opData := range indexerChan {
 		op, engine, docID, doc := opData.op, opData.engine, opData.docID, opData.doc
 		switch op {
-		case _INDEX_DOC:
+		case TypeIndexDoc:
 			engine.IndexDoc(docID, *doc, true)
-		case _DELETE_DOC:
+		case TypeDeleteDoc:
 			engine.RemoveDoc(docID, true)
-		case _FLUSH_DOC:
+		case TypeFlushDoc:
 			engine.Flush()
 		}
 	}

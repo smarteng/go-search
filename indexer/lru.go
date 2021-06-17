@@ -89,8 +89,8 @@ func lruGet(timeLimit time.Time) chan string {
 		if !ok {
 			return
 		}
-		index := k.(string)
-		t := v.(time.Time)
+		index, _ := k.(string)
+		t, _ := v.(time.Time)
 		if t.Before(timeLimit) {
 			lruAccess.Remove(k) // the key will go into tooOldIndex
 

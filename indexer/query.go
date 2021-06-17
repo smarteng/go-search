@@ -352,7 +352,7 @@ func (scorer *scorerT) Score(doc types.IndexedDoc, fields interface{}) []float32
 	if reflect.TypeOf(fields) != reflect.TypeOf(StoredDoc{}) {
 		return []float32{}
 	}
-	storedDoc := fields.(StoredDoc)
+	storedDoc, _ := fields.(StoredDoc)
 
 	// 通过字段过滤去掉不需要的doc
 	if !storedDoc.satisfied(scorer.pq.filters, scorer.schema) {
@@ -394,7 +394,7 @@ func (d StoredDoc) score(sortBys []sorting, bm25 int) []float32 {
 func sortingScore(storedVal interface{}, bm25 int) float32 {
 	v := reflect.ValueOf(storedVal)
 
-	switch storedVal.(type) {
+	switch i := storedVal.(type) {
 	case string:
 		return float32(bm25)
 	case int8, int16, int32, int64, int:
@@ -404,8 +404,7 @@ func sortingScore(storedVal interface{}, bm25 int) float32 {
 	case float32, float64:
 		return float32(v.Float())
 	case bool:
-		b := storedVal.(bool)
-		if b {
+		if i {
 			return float32(2)
 		}
 		return float32(1)
@@ -460,8 +459,8 @@ func (d StoredDoc) satisfied(filters []filter, schema *conf.Schema) bool {
 func condEquals(storedVal, cond interface{}, tokenizer string) bool {
 	switch cond.(type) {
 	case string:
-		cv := cond.(string)
-		sv := storedVal.(string)
+		cv, _ := cond.(string)
+		sv, _ := storedVal.(string)
 		switch tokenizer {
 		case conf.ZhTokenizer:
 			return strings.Contains(sv, cv)
@@ -482,17 +481,17 @@ func condEquals(storedVal, cond interface{}, tokenizer string) bool {
 }
 
 func inRange(storedVal interface{}, r *scope) bool {
-	switch storedVal.(type) {
+	switch in := storedVal.(type) {
 	case string:
-		sv := storedVal.(string)
+		sv := in
 		if r.from != nil {
-			r1 := r.from.(string)
+			r1, _ := r.from.(string)
 			if sv < r1 {
 				return false
 			}
 		}
 		if r.to != nil {
-			r2 := r.to.(string)
+			r2, _ := r.to.(string)
 			if sv > r2 {
 				return false
 			}

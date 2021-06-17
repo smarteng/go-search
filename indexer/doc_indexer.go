@@ -186,9 +186,9 @@ func (idx *indexer) indexDoc(doc map[string]interface{}) (string, error) {
 			pk[fieldIdx] = val
 		}
 
-		switch val.(type) {
+		switch i := val.(type) {
 		case string:
-			s := val.(string)
+			s := i
 			var segTokens []string
 			switch field.Tokenizer {
 			case conf.ZhTokenizer:
@@ -207,7 +207,6 @@ func (idx *indexer) indexDoc(doc map[string]interface{}) (string, error) {
 			}
 		default:
 		}
-
 		storedDoc[fieldName] = val
 	}
 	pkIdx := idx.schema.PKIdx
@@ -226,7 +225,7 @@ func (idx *indexer) indexDoc(doc map[string]interface{}) (string, error) {
 	dID := docID.String()
 	count := mergeTokenLocs(&tokens)
 	indexerChan <- &indexerOp{
-		op:     _INDEX_DOC,
+		op:     TypeIndexDoc,
 		engine: engine,
 		docID:  dID,
 		doc: &types.DocData{
@@ -346,7 +345,7 @@ func mergeTokenLocs(pTokens *[]types.TokenData) int {
 
 func (idx *indexer) deleteDoc(docID string) {
 	indexerChan <- &indexerOp{
-		op:     _DELETE_DOC,
+		op:     TypeDeleteDoc,
 		engine: idx.engine,
 		docID:  docID,
 	}
@@ -354,7 +353,7 @@ func (idx *indexer) deleteDoc(docID string) {
 
 func (idx *indexer) flush() {
 	indexerChan <- &indexerOp{
-		op:     _FLUSH_DOC,
+		op:     TypeFlushDoc,
 		engine: idx.engine,
 	}
 }

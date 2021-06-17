@@ -10,7 +10,7 @@ import (
 )
 
 func getReader(c *helper.Context, multipartFileParam string) (in io.ReadCloser, contentType, ext string, err error) {
-	ct := strings.FieldsFunc(c.Header(HEADER_CONTENT_TYPE), func(ch rune) bool {
+	ct := strings.FieldsFunc(c.Header(HeaderContentType), func(ch rune) bool {
 		return ch == ' ' || ch == ';'
 	})
 	if len(ct) > 0 {
@@ -18,7 +18,7 @@ func getReader(c *helper.Context, multipartFileParam string) (in io.ReadCloser, 
 	}
 
 	switch contentType {
-	case MULTIPART_FORM:
+	case MultipartForm:
 		file, e := c.FormFile(multipartFileParam)
 		if e != nil {
 			err = fmt.Errorf("argument %s expected", multipartFileParam)

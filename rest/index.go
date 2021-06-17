@@ -98,7 +98,7 @@ func IndexDocs(c *helper.Context) {
 
 	var indexReader indexer.FnIndexReader
 	var ok bool
-	if contentType == MULTIPART_FORM {
+	if contentType == MultipartForm {
 		if indexReader, ok = ext2Indexer[ext]; !ok {
 			indexReader = indexer.IndexJSON
 		}
@@ -141,7 +141,7 @@ var ext2Indexer = map[string]indexer.FnIndexReader{
 }
 
 var contentType2Indexer = map[string]indexer.FnIndexReader{
-	JSON_MIME:      indexer.IndexJSON,
-	CSV_MIME:       indexer.IndexCSV,
-	JSONLINES_MIME: indexer.IndexJSONLines,
+	JSONMime:      indexer.IndexJSON,
+	CsvMime:       indexer.IndexCSV,
+	jSONLinesMime: indexer.IndexJSONLines,
 }
