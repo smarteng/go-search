@@ -13,14 +13,14 @@ var specialDelis = map[rune]bool{
 }
 
 func whitespaceTokenize(s string, keepIt ...rune) []string {
-	return tokenize_i(s, false, keepIt...)
+	return tokenizeI(s, false, keepIt...)
 }
 
 func hanziTokenize(s string, keepIt ...rune) []string {
-	return tokenize_i(s, true, keepIt...)
+	return tokenizeI(s, true, keepIt...)
 }
 
-func tokenize_i(s string, breakHz bool, keepIt ...rune) []string {
+func tokenizeI(s string, breakHz bool, keepIt ...rune) []string {
 	if len(s) == 0 {
 		return []string{}
 	}
@@ -70,7 +70,6 @@ func breakTokens(s string, breakHz bool, keepIt map[rune]bool) <-chan string {
 			sb.Reset()
 		}
 	}
-
 	var parseToken = func(s string) {
 		var quote rune
 		for _, ch := range s {
@@ -127,7 +126,6 @@ func breakTokens(s string, breakHz bool, keepIt map[rune]bool) <-chan string {
 			}
 		}
 	}
-
 	go func() {
 		for {
 			parseToken(s)
@@ -147,7 +145,6 @@ func breakTokens(s string, breakHz bool, keepIt map[rune]bool) <-chan string {
 
 		close(res)
 	}()
-
 	return res
 }
 

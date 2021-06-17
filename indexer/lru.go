@@ -20,7 +20,8 @@ func onEvict(key, value interface{}) {
 		return
 	}
 	tooOldLock.Lock()
-	tooOldIndex[key.(string)] = value.(time.Time)
+	t, _ := value.(time.Time)
+	tooOldIndex[key.(string)] = t
 	tooOldLock.Unlock()
 }
 
