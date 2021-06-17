@@ -11,7 +11,9 @@ import (
 )
 
 // 根据参数完成实际的搜索查询
-func Query(index, q, fq, s, f, page, pagesize, fl string) (pagination interface{}, timeout bool, docs <-chan interface{}, err error) {
+func Query(
+	index, q, fq, s, f, page, pagesize, fl string,
+) (pagination interface{}, timeout bool, docs <-chan interface{}, err error) {
 	if !running {
 		return nil, false, nil, fmt.Errorf("the service is stopped")
 	}
@@ -135,10 +137,10 @@ func (idx *indexer) generateFieldTokens(fIdx int, qs []string, flag *bool, res *
 	for _, q := range qs {
 		var tokens []string
 		switch tokenizer {
-		case conf.ZH_TOKENIZER:
+		case conf.ZhTokenizer:
 			// tokens = idx.engine.Segment(q)
 			tokens = hanziTokenize(q)
-		case conf.NONE_TOKENIZER:
+		case conf.NoneTokenizer:
 			// tokens = []string{strings.TrimSpace(q)}
 		default:
 			tokens = whitespaceTokenize(q)
@@ -461,9 +463,9 @@ func condEquals(storedVal, cond interface{}, tokenizer string) bool {
 		cv := cond.(string)
 		sv := storedVal.(string)
 		switch tokenizer {
-		case conf.ZH_TOKENIZER:
+		case conf.ZhTokenizer:
 			return strings.Contains(sv, cv)
-		case conf.NONE_TOKENIZER:
+		case conf.NoneTokenizer:
 			return cv == strings.TrimSpace(sv)
 		default:
 			tokens := whitespaceTokenize(sv)

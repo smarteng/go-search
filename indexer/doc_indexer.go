@@ -191,10 +191,10 @@ func (idx *indexer) indexDoc(doc map[string]interface{}) (string, error) {
 			s := val.(string)
 			var segTokens []string
 			switch field.Tokenizer {
-			case conf.ZH_TOKENIZER:
+			case conf.ZhTokenizer:
 				// segTokens = engine.Segment(s)
 				segTokens = hanziTokenize(s)
-			case conf.NONE_TOKENIZER:
+			case conf.NoneTokenizer:
 				// segTokens = []string{strings.TrimSpace(s)}
 				val = strings.TrimSpace(s)
 			default:

@@ -35,9 +35,9 @@ import (
 
 // 各种分词器
 const (
-	ZH_TOKENIZER   = "zh"
-	WS_TOKENIZER   = "space" // default tokenizer
-	NONE_TOKENIZER = "none"
+	ZhTokenizer   = "zh"
+	WsTokenizer   = "space" // default tokenizer
+	NoneTokenizer = "none"
 )
 
 var (
@@ -457,12 +457,12 @@ func checkSchemaConf(
 		}
 
 		switch field.Tokenizer {
-		case ZH_TOKENIZER:
+		case ZhTokenizer:
 			needZhSeg = true
-		case WS_TOKENIZER:
-		case NONE_TOKENIZER:
+		case WsTokenizer:
+		case NoneTokenizer:
 		case "":
-			field.Tokenizer = WS_TOKENIZER
+			field.Tokenizer = WsTokenizer
 		default:
 			return nil, nil, nil, nil, false, fmt.Errorf("unknown tokenizer %s in field name %s", field.Tokenizer, field.Name)
 		}
